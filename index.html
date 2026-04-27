@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Coach</title>
+<style>
+:root{--app-bg:#f5e9db;--chat-bg:#faf7f4;--coach-bg:#fff;--user-bg:#dce8fb;--text:#1a1a1a;--muted:#888;--blue:#0078d4}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#d8cfc6;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:16px 0 32px}
+.phone{width:390px;max-width:calc(100vw - 32px);height:85vh;max-height:820px;background:var(--app-bg);border-radius:44px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.1);position:relative;flex-shrink:0}
+.blobs{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.18}
+.blob{position:absolute;border-radius:50%;filter:blur(50px)}
+.blob1{width:260px;height:260px;background:rgba(255,148,70,.22);top:50px;left:60px}
+.blob2{width:200px;height:200px;background:rgba(255,190,130,.18);top:160px;right:20px}
+.status-bar{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:700;color:var(--text);position:relative;z-index:20;flex-shrink:0}
+.status-right{display:flex;align-items:center;gap:6px;font-size:11px}
+.app-header{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;position:relative;z-index:20;flex-shrink:0}
+.hdr-btn{width:36px;height:36px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px;color:var(--text)}
+.hdr-center{display:flex;flex-direction:column;align-items:center;gap:1px}
+.hdr-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px}
+.hdr-sub{font-size:10px;color:var(--muted)}
+.chat-scroll{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px;background:var(--chat-bg);position:relative;z-index:5}
+.chat-scroll::-webkit-scrollbar{display:none}
+.msg{max-width:85%}.msg.user{align-self:flex-end}.msg.coach{align-self:flex-start}
+.msg-who{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#c0b8b0;margin-bottom:4px}
+.msg.user .msg-who{text-align:right}
+.bubble{border-radius:18px;padding:11px 14px;font-size:13.5px;line-height:1.65;color:var(--text)}
+.msg.coach .bubble{background:var(--coach-bg);border-top-left-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.09)}
+.msg.user .bubble{background:var(--user-bg);border-top-right-radius:4px;color:#1a2a3a}
+.bubble p{margin-bottom:8px}.bubble p:last-child{margin-bottom:0}
+.bubble strong{font-weight:600}
+.bubble ul{margin:6px 0 8px;padding-left:18px}.bubble ul li{margin-bottom:3px;line-height:1.55}
+.coach-row{display:flex;align-items:flex-start;gap:8px}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0078d4,#00bcf2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:18px}
+.starter-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:20px 8px 8px}
+.chip{background:#fff;border:1px solid #e0d8d0;border-radius:20px;padding:8px 14px;font-size:12px;color:#555;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip:hover{border-color:var(--blue);color:var(--blue);background:#f5f8ff}
+.welcome-text{text-align:center;font-size:12px;color:#b0a898;padding:20px 20px 4px;line-height:1.5}
+.input-bar{background:#fff;border-top:1px solid rgba(0,0,0,.06);padding:10px 12px 18px;display:flex;align-items:center;gap:8px;flex-shrink:0;box-shadow:0 -3px 12px rgba(0,0,0,.06);position:relative;z-index:20}
+.input-pill{flex:1;background:#f2f2f2;border-radius:24px;min-height:44px;display:flex;align-items:flex-end;padding:10px 14px;gap:8px;border:1.5px solid transparent;transition:border-color .15s,background .15s}
+.attach-btn{width:40px;height:40px;background:#fff;border:1.5px solid #e0d8d0;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#888;flex-shrink:0;transition:all .15s;line-height:1}
+.attach-btn:hover{border-color:var(--blue);color:var(--blue)}
+.input-pill:focus-within{border-color:var(--blue);background:#fff}
+.pill-input{flex:1;border:none;background:transparent;font-size:13.5px;color:var(--text);font-family:inherit;outline:none;resize:none;max-height:80px;line-height:1.4;height:20px;overflow-y:hidden}
+.pill-input::placeholder{color:#aaa}
+.send-btn{width:34px;height:34px;background:var(--blue);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;flex-shrink:0;opacity:0;transition:opacity .15s;pointer-events:none}
+.send-btn.visible{opacity:1;pointer-events:auto}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.typing{display:flex;gap:4px;padding:8px 12px;align-items:center}
+.typing .dot{width:8px;height:8px;border-radius:50%;background:#ccc;animation:bounce 1.4s infinite}
+.typing .dot:nth-child(2){animation-delay:.2s}
+.typing .dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.error-msg{align-self:center;background:#fff0f0;border:1px solid #fcc;border-radius:12px;padding:8px 14px;font-size:12px;color:#c00;max-width:85%}
+.screen-label{margin-top:14px;font-size:11px;color:rgba(0,0,0,.4);text-align:center;font-family:'Segoe UI',system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="blobs"><div class="blob blob1"></div><div class="blob blob2"></div></div>
+  <div class="status-bar">
+    <span>10:30</span>
+    <div class="status-right">
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
+        <rect x="0" y="4" width="3" height="7" rx="0.5" fill="#1a1a1a"/>
+        <rect x="4" y="2.5" width="3" height="8.5" rx="0.5" fill="#1a1a1a"/>
+        <rect x="8" y="1" width="3" height="10" rx="0.5" fill="#1a1a1a"/>
+        <rect x="12" y="0" width="3" height="11" rx="0.5" fill="#1a1a1a" opacity="0.3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 2.5C10.5 2.5 12.7 3.6 14.2 5.3L15.5 4C13.6 1.9 10.9 0.5 8 0.5C5.1 0.5 2.4 1.9 0.5 4L1.8 5.3C3.3 3.6 5.5 2.5 8 2.5Z" fill="#1a1a1a"/>
+        <path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.4L13.6 6.1C12.1 4.5 10.2 3.5 8 3.5C5.8 3.5 3.9 4.5 2.4 6.1L3.7 7.4C4.8 6.2 6.3 5.5 8 5.5Z" fill="#1a1a1a"/>
+        <circle cx="8" cy="10.5" r="1.5" fill="#1a1a1a"/>
+      </svg>
+      <span style="font-weight:600">84%</span>
+    </div>
+  </div>
+  <div class="app-header">
+    <div class="hdr-center">
+      <span class="hdr-title">Health Coach</span>
+      <span class="hdr-sub">AI Health Coach Prototype</span>
+    </div>
+  </div>
+  <div class="chat-scroll" id="chat">
+    <div class="welcome-text">
+      Your AI health coach for Type 2 Diabetes.<br>
+      Ask anything about food, meals, or daily habits.
+    </div>
+    <div class="starter-chips" id="chips">
+      <button class="chip" onclick="sendMessage('What should I eat for breakfast if I have diabetes?')">What should I eat for breakfast?</button>
+      <button class="chip" onclick="sendMessage('My blood sugar spiked after lunch. What should I do right now?')">My blood sugar spiked after lunch</button>
+      <button class="chip" onclick="sendMessage('I\'m at a wedding buffet tonight. What can I eat safely?')">I\'m at a wedding buffet tonight</button>
+    </div>
+  </div>
+  <div class="input-bar">
+    <button class="attach-btn" id="attachBtn" onclick="document.getElementById('fileInput').click()">+</button>
+    <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none">
+    <div class="input-pill">
+      <textarea class="pill-input" id="input" placeholder="Ask your health coach..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">&#8593;</button>
+    </div>
+  </div>
+</div>
+<div class="screen-label">Prototype. Not medical advice. Built by Anand Ravi</div>
+
+<script>
+var chat=document.getElementById('chat');
+var input=document.getElementById('input');
+var sendBtn=document.getElementById('sendBtn');
+var chips=document.getElementById('chips');
+var chatHistory=[];
+var isLoading=false;
+var EMOJI='🫀';
+
+function toggleSend(){
+  if(input.value.trim().length>0 && !isLoading){sendBtn.classList.add('visible')}
+  else{sendBtn.classList.remove('visible')}
+  input.style.height='20px';
+  input.style.height=Math.min(input.scrollHeight,80)+'px';
+}
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function parseMarkdown(text){
+  var lines=text.split('\n');
+  var html='';
+  var inList=false;
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+    line=line.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    if(/^[\-\*]\s/.test(line)){
+      if(!inList){html+='<ul>';inList=true}
+      html+='<li>'+line.replace(/^[\-\*]\s/,'')+'</li>';
+    }else{
+      if(inList){html+='</ul>';inList=false}
+      if(line.trim()==='')continue;
+      html+='<p>'+line+'</p>';
+    }
+  }
+  if(inList)html+='</ul>';
+  return html;
+}
+
+function addUserMsg(t){
+  var d=document.createElement('div');
+  d.className='msg user';
+  d.innerHTML='<div class="msg-who">You</div><div class="bubble">'+esc(t)+'</div>';
+  chat.appendChild(d);scrollDown();
+}
+
+function addCoachMsg(t){
+  var r=document.createElement('div');
+  r.className='coach-row';
+  r.innerHTML='<div class="avatar">'+EMOJI+'</div>'+
+    '<div class="msg coach"><div class="msg-who">Health Coach</div>'+
+    '<div class="bubble">'+parseMarkdown(t)+'</div></div>';
+  chat.appendChild(r);scrollDown();
+}
+
+function addError(t){
+  var d=document.createElement('div');
+  d.className='error-msg';
+  d.textContent=t;
+  chat.appendChild(d);scrollDown();
+}
+
+function showTyping(){
+  var d=document.createElement('div');
+  d.className='coach-row';
+  d.id='typing';
+  d.innerHTML='<div class="avatar">'+EMOJI+'</div>'+
+    '<div class="msg coach"><div class="typing">'+
+    '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'+
+    '</div></div>';
+  chat.appendChild(d);scrollDown();
+}
+
+function removeTyping(){var e=document.getElementById('typing');if(e)e.remove()}
+
+function scrollDown(){setTimeout(function(){chat.scrollTop=chat.scrollHeight},50)}
+
+async function sendMessage(text){
+  if(isLoading)return;
+  var msg=text||input.value.trim();
+  if(!msg)return;
+  if(chips)chips.style.display='none';
+  addUserMsg(msg);
+  chatHistory.push({role:'user',content:msg});
+  input.value='';
+  input.style.height='20px';
+  toggleSend();
+  isLoading=true;
+  input.disabled=true;
+  sendBtn.disabled=true;
+  showTyping();
+  try{
+    var res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:chatHistory})
+    });
+    var data=await res.json();
+    removeTyping();
+    if(data.error){
+      addError(data.error);
+      chatHistory.pop();
+    }else{
+      chatHistory.push({role:'assistant',content:data.reply});
+      addCoachMsg(data.reply);
+    }
+  }catch(err){
+    removeTyping();
+    addError('Could not reach the server. Try again.');
+    chatHistory.pop();
+  }
+  isLoading=false;
+  input.disabled=false;
+  sendBtn.disabled=false;
+  toggleSend();
+  input.focus();
+}
+
+document.getElementById('fileInput').addEventListener('change',function(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  e.target.value='';
+  sendMessage('I\'ve uploaded my blood sugar report: '+file.name+'. Can you help me understand what my readings mean?');
+});
+
+input.addEventListener('input',toggleSend);
+input.addEventListener('keydown',function(e){
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendMessage()}
+});
+input.focus();
+</script>
+</body>
+</html>
