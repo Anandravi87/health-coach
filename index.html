@@ -59,23 +59,6 @@ body{background:#d8cfc6;font-family:'Segoe UI',system-ui,-apple-system,sans-seri
 <body>
 <div class="phone">
   <div class="blobs"><div class="blob blob1"></div><div class="blob blob2"></div></div>
-  <div class="status-bar">
-    <span>10:30</span>
-    <div class="status-right">
-      <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
-        <rect x="0" y="4" width="3" height="7" rx="0.5" fill="#1a1a1a"/>
-        <rect x="4" y="2.5" width="3" height="8.5" rx="0.5" fill="#1a1a1a"/>
-        <rect x="8" y="1" width="3" height="10" rx="0.5" fill="#1a1a1a"/>
-        <rect x="12" y="0" width="3" height="11" rx="0.5" fill="#1a1a1a" opacity="0.3"/>
-      </svg>
-      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-        <path d="M8 2.5C10.5 2.5 12.7 3.6 14.2 5.3L15.5 4C13.6 1.9 10.9 0.5 8 0.5C5.1 0.5 2.4 1.9 0.5 4L1.8 5.3C3.3 3.6 5.5 2.5 8 2.5Z" fill="#1a1a1a"/>
-        <path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.4L13.6 6.1C12.1 4.5 10.2 3.5 8 3.5C5.8 3.5 3.9 4.5 2.4 6.1L3.7 7.4C4.8 6.2 6.3 5.5 8 5.5Z" fill="#1a1a1a"/>
-        <circle cx="8" cy="10.5" r="1.5" fill="#1a1a1a"/>
-      </svg>
-      <span style="font-weight:600">84%</span>
-    </div>
-  </div>
   <div class="app-header">
     <div class="hdr-center">
       <span class="hdr-title">Mira</span>
@@ -225,7 +208,15 @@ document.getElementById('fileInput').addEventListener('change',function(e){
   var file=e.target.files[0];
   if(!file)return;
   e.target.value='';
-  sendMessage('I\'ve uploaded my blood sugar report: '+file.name+'. Can you help me understand what my readings mean?');
+  var isPDF=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
+  var healthKeywords=['blood','report','test','lab','hba1c','glucose','sugar','result','panel'];
+  var hasHealthKeyword=healthKeywords.some(function(kw){return file.name.toLowerCase().indexOf(kw)!==-1;});
+  if(isPDF||hasHealthKeyword){
+    sendMessage('I\'ve uploaded my blood test report: '+file.name+'. Can you help me understand what my readings mean?');
+  }else{
+    if(chips)chips.style.display='none';
+    addCoachMsg('To help you best, please upload your blood test report or glucose readings. I can walk you through what your numbers mean and what to do next.');
+  }
 });
 
 input.addEventListener('input',toggleSend);
